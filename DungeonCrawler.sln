@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DungeonCrawler.Core", "DungeonCrawler.Core\DungeonCrawler.Core.csproj", "{94B549DF-798B-40CD-B4B6-4F172E8309BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DungeonCrawler.DesktopGL", "DungeonCrawler.DesktopGL\DungeonCrawler.DesktopGL.csproj", "{F9A5C15E-43E4-42EE-B9D8-653F0C8B26C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94B549DF-798B-40CD-B4B6-4F172E8309BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94B549DF-798B-40CD-B4B6-4F172E8309BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94B549DF-798B-40CD-B4B6-4F172E8309BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94B549DF-798B-40CD-B4B6-4F172E8309BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9A5C15E-43E4-42EE-B9D8-653F0C8B26C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9A5C15E-43E4-42EE-B9D8-653F0C8B26C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9A5C15E-43E4-42EE-B9D8-653F0C8B26C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9A5C15E-43E4-42EE-B9D8-653F0C8B26C7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
