@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using DungeonCrawler.Core.SoftwareRenderer.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -138,19 +139,21 @@ public class RenderBuffer : IDisposable
         return (rb & 0x00FF00FFu) | (g & 0x0000FF00u) | 0xFF000000u;
     }
     
-    public static int Brightness(double depth, double lightRadius)
-    {
-        double lit = lightRadius > 0 ? Math.Clamp(1.0 - depth / lightRadius, 0, 1) : 0;
-        lit *= lit;
-        return Engine.AmbientLevel + (int)(lit * (256 - Engine.AmbientLevel));
-    }
-    
     /// <summary>Multiplies a packed color by a 0..256 brightness.</summary>
-    public static uint Shade(uint packed, int brightness)
+    public static uint Shade(uint packed, uint brightness)
     {
         var r = (packed & 0xFFu) * (uint)brightness >> 8;
         var g  = (packed >> 8 & 0xFFu) * (uint)brightness >> 8;
         var b = (packed >> 16 & 0xFFu) * (uint)brightness >> 8; 
+        return r | (g << 8) | (b << 16) | (packed & 0xFF000000u);
+    }
+    
+    /// <summary>Multiplies a packed color by a 0..256 brightness.</summary>
+    public static uint Shade(uint packed, in Shade3 light)
+    {
+        var r = (packed & 0xFFu) * (uint)light.R >> 8;
+        var g  = (packed >> 8 & 0xFFu) * (uint)light.G >> 8;
+        var b = (packed >> 16 & 0xFFu) * (uint)light.B >> 8; 
         return r | (g << 8) | (b << 16) | (packed & 0xFF000000u);
     }
 }

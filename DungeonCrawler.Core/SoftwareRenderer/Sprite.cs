@@ -1,4 +1,5 @@
 ﻿using DungeonCrawler.Core.Entities;
+using DungeonCrawler.Core.Maths;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

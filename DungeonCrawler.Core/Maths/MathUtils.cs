@@ -4,6 +4,6 @@ namespace DungeonCrawler.Core.Maths;
 
 public static class MathUtils
 {
-    public static double RadToDeg => 180 / Math.PI;
-    public static double DegToRad => Math.PI / 180;
+    public static float RadToDeg => 180f / MathF.PI;
+    public static float DegToRad => MathF.PI / 180f;
 }

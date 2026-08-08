@@ -7,83 +7,81 @@ namespace DungeonCrawler.Core.Entities;
 
 public class Player : Entity
 {
+    public static float FOV = 0.889f;
+    
     public Vec2 Direction { get; set; }
     
-    public Vec2 Plane { get; set; } = new(0, 0.66);
+    public Vec2 Plane { get; set; } = new(0f, FOV);
 
-    private double _planeHalfWidth = 0.66; // FOV 66
+    public float PlaneHalfWidth { get; private set; }
 
-    public double FieldOfViewInDegrees
+    public float FieldOfViewInDegrees
     {
-        get => 2.0 * Math.Atan(_planeHalfWidth) * MathUtils.RadToDeg;
+        get => 2.0f * MathF.Atan(PlaneHalfWidth) * MathUtils.RadToDeg;
         set
         {
-            _planeHalfWidth = Math.Tan(value * 0.5 * MathUtils.DegToRad);
-            Plane = Direction.Perpendicular * _planeHalfWidth;
+            PlaneHalfWidth = MathF.Tan(value * 0.5f * MathUtils.DegToRad);
+            Plane = Direction.Perpendicular * PlaneHalfWidth;
         }
     }
     
-    public double CurrentSpeed { get; set; }
-    public double MovementSpeed { get; set; } = 5.0f;
-    public double RunMultiplier { get; set; } = 1.1f;
+    public float CurrentSpeed { get; set; }
+    public float MovementSpeed { get; set; } = 5.0f;
+    public float RunMultiplier { get; set; } = 1.1f;
 
-    public double TurnSpeed { get; set; } = 5.0f;
-    public double Turn { get; set; }
-
-    public int LightRadius { get; set; } = 0;
+    public float TurnSpeed { get; set; } = 5.0f;
+    public float Turn { get; set; }
+   
+    private InputHandler _inputHandler;
     
-    public Player()
+    public Player(InputHandler inputHandler)
     {
-        Radius = 0.5;
+        _inputHandler = inputHandler;
+        Radius = 0.2f;
         Health = MaxHealth = 10;
     }
     
-    public override void Update(Level level, double deltaTime)
+    public override void Update(Level level, float deltaTime)
     {
-        var keyboardState = Keyboard.GetState();
-        
-        UpdateMovement(level, keyboardState, deltaTime);
+        UpdateMovement(level, deltaTime);
 
-        if(keyboardState.IsKeyDown(Keys.Space))
+        if(_inputHandler.IsKeyJustPressed(Keys.Space))
         {
             level.Spawn(new Projectile
             {
-                Position = Position + Direction * (Radius + 0.1),
-                Velocity = Direction * 10,
+                Position = Position + Direction * (Radius + 0.5f),
+                Velocity = Direction * 10f,
                 DamageInfo = new DamageInfo(1, 0.0f, 0.5f, Direction),
                 Owner = this
             });
-        }
-
-        if (keyboardState.IsKeyDown(Keys.T))
-        {
-            LightRadius++;
-        }
-        
-        if (keyboardState.IsKeyDown(Keys.Y))
-        {
-            Engine.AmbientLevel++;
         }
         
         base.Update(level, deltaTime);
     }
 
-    private void UpdateMovement(Level level, KeyboardState keyboardState, double deltaTime)
+    private void UpdateMovement(Level level, float deltaTime)
     {   
-        bool isRunning = keyboardState.IsKeyDown(Keys.LeftShift);
-        double speed = (isRunning ? RunMultiplier : 1f) * MovementSpeed *  deltaTime;
-        double rotationSpeed = TurnSpeed * deltaTime;
+        bool isRunning = _inputHandler.IsKeyDown(Keys.LeftShift);
+        float speed = (isRunning ? RunMultiplier : 1f) * MovementSpeed;
         
-        var forward = keyboardState.IsKeyDown(Keys.W) ? 1 : keyboardState.IsKeyDown(Keys.S) ? -1 : 0;
+        var forward = _inputHandler.Forward;
+        var lateral = _inputHandler.Lateral;
 
         var prevPosition = Position;
+
+        var delta = Direction * (forward > 0 ? forward : forward * 0.6f) + Direction.Perpendicular * -lateral * 0.75f;
+        if (delta.LengthSquared > 1.0f)
+        {
+            delta = delta.Normalized;
+        }
         
-        Move(level, Direction * (forward * speed), false);
+        Move(level, delta * speed * deltaTime, false);
 
         CurrentSpeed = deltaTime > 0 ? (Position - prevPosition).Length / deltaTime : 0;
         
-        var rotDir = keyboardState.IsKeyDown(Keys.A) ? 1 : keyboardState.IsKeyDown(Keys.D) ? -1 : 0;
-        Turn = rotDir * rotationSpeed;
+        // var rotDir = _inputHandler.IsKeyDown(Keys.A) ? 1 : _inputHandler.IsKeyDown(Keys.D) ? -1 : 0;
+        // Turn = rotDir * rotationSpeed;
+        Turn = _inputHandler.MouseTurn;
 
         if (Turn != 0)
         {
@@ -93,7 +91,13 @@ public class Player : Entity
             // can probably be rewritten as: [rotMatrix] * [dirX, dirY] (column vector)
             
             Direction = Direction.Rotated(Turn).Normalized;
-            Plane = Direction.Perpendicular * _planeHalfWidth;
+            Plane = Direction.Perpendicular * PlaneHalfWidth;
         }
+    }
+
+    public void UpdateAspect(int bufferWidth, int bufferHeight)
+    {
+        PlaneHalfWidth = bufferWidth / (2f * bufferHeight);
+        Plane = Direction.Perpendicular * PlaneHalfWidth;
     }
 }

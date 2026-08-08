@@ -6,14 +6,14 @@ public class Spider : Entity
 {
     public Entity Target { get; set; }
 
-    public double Speed { get; set; } = 1.0f;
+    public float Speed { get; set; } = 1.0f;
 
     public Spider()
     {
         Health = MaxHealth = 10;
     }
     
-    public override void Update(Level level, double deltaTime)
+    public override void Update(Level level, float deltaTime)
     {
         if (Target == null)
         {

@@ -9,11 +9,11 @@ public class Projectile : Entity
 
     public Projectile()
     {
-        Radius = 0.1;
+        Radius = 0.1f;
         Health = MaxHealth = 1;
     }
 
-    public override void Update(Level level, double dt)
+    public override void Update(Level level, float dt)
     {
         Lifetime -= dt;
         if (Lifetime <= 0) 

@@ -1,25 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using DungeonCrawler.Core.Entities;
+using DungeonCrawler.Core.Maths;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace DungeonCrawler.Core.SoftwareRenderer;
 
-// Will become an entity later
-public struct BillboardItem
-{
-    public double X { get; set; }
-    public double Z { get; set; }
-}
-
 public struct BillboardRenderInfo
 {
     public int SpriteSize { get; init; }
     
-    public double Depth { get; init; }
+    public float Depth { get; init; }
     
-    public double Lateral { get; init; }
+    public float Lateral { get; init; }
     
     public int ScreenX { get; init; }
     
@@ -42,7 +36,7 @@ public class BillboardRenderer
 
     public IReadOnlyList<BillboardRenderInfo> RenderData => _renderData;
     
-    public void Render(RenderBuffer buffer, Player player, List<Sprite> sprites, double[] wallDepth)
+    public void Render(RenderBuffer buffer, Player player, List<Sprite> sprites, float[] wallDepth)
     {
         _renderData.Clear();
         
@@ -125,7 +119,7 @@ public class BillboardRenderer
         // offsetX = lateral * planeX + depth * dirX
         // offsetZ = lateral * planeZ + depth * dirZ
         // (depth * dirX - offsetX)/planeX = lateral
-        var invDet = 1.0 / Vec2.Cross(plane, dir);
+        var invDet = 1.0f / Vec2.Cross(plane, dir);
         // var invDet = 1.0 / (planeX * dirZ - dirX * planeZ);
         
         var lateral = invDet * (dir.Z * offset.X - dir.X * offset.Z);
@@ -137,8 +131,8 @@ public class BillboardRenderer
 
         if (depth > 0)
         {
-            screenX = (int)((double)buffer.Width / 2 * (1 + lateral / depth));
-            double rawSize = buffer.Height / depth;
+            screenX = (int)((float)buffer.Width / 2 * (1 + lateral / depth));
+            float rawSize = buffer.Height / depth;
             
             spriteSize = rawSize >= MaxSpriteSize ? MaxSpriteSize : (int)rawSize;
         }

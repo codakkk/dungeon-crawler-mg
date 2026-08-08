@@ -6,8 +6,8 @@ namespace DungeonCrawler.Core.Entities;
 
 public readonly record struct DamageInfo(
     int Amount,
-    double Stagger = 0.25f,
-    double Knockback = 0.0f,
+    float Stagger = 0.25f,
+    float Knockback = 0.0f,
     Vec2 Direction = default);
 
 public abstract class Entity
@@ -21,23 +21,23 @@ public abstract class Entity
 
     public bool IsAlive => Health > 0;
     
-    public double Radius { get; set; } = 0.3;
+    public float Radius { get; set; } = 0.3f;
 
     public int TileX => (int)Position.X;
     public int TileZ => (int)Position.Z;
 
-    public double FlashTime { get; protected set; }
-    public double StaggerTime { get; protected set; }
-    public double InvulnerableTime { get; protected set; }
+    public float FlashTime { get; protected set; }
+    public float StaggerTime { get; protected set; }
+    public float InvulnerableTime { get; set; }
     
-    public double StaggerResistance { get; protected set; }
+    public float StaggerResistance { get; protected set; }
     
-    public virtual void Update(Level level, double deltaTime)
+    public virtual void Update(Level level, float deltaTime)
     {
         if (Velocity.LengthSquared > 0.00001)
         {
             Move(level, Velocity * deltaTime);
-            Velocity *= Math.Pow(0.02, deltaTime);
+            Velocity *= MathF.Pow(0.02f, deltaTime);
         }
         else Velocity = Vec2.Zero;
         

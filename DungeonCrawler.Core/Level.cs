@@ -56,7 +56,22 @@ public class Level
         {
             for (int z = 0; z < tiles.GetLength(1); z++)
             {
-                _tiles[x + z * Width] = tiles[x, z];
+                var tile = tiles[x, z];
+                
+                // torch
+                if (tile == 6)
+                {
+                    Spawn(new Torch
+                    {
+                        Position = new Vec2(x + 0.5f, z + 0.5f),
+                        Radius = 0.3f,
+                    });
+                }
+
+                else
+                {
+                    _tiles[x + z * Width] = tiles[x, z];
+                }
             }
         }
     }

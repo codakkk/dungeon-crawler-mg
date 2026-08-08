@@ -11,7 +11,7 @@ public class HealthBarRenderer
         _renderer = renderer;
     }
 
-    public void Render(RenderBuffer buffer, double[] wallDepth)
+    public void Render(RenderBuffer buffer, float[] wallDepth)
     {
         var data = _renderer.RenderData;
 
@@ -37,7 +37,7 @@ public class HealthBarRenderer
             var barX = item.ScreenX - barWidth / 2;
             var barY = top - barHeight - Math.Max(2, size / 20);
             
-            var frac = Math.Clamp(entity.Health / (double)entity.MaxHealth, 0, 1);
+            var frac = Math.Clamp(entity.Health / (float)entity.MaxHealth, 0, 1);
             int fillW = (int)(barWidth * frac);
 
             for (int y = barY; y < barY + barHeight; ++y)
