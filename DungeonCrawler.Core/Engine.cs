@@ -17,7 +17,8 @@ public class Engine : Game
 
     public const int TargetWidth = 640;
     public const int TargetHeight = 480;
-
+    public static int AmbientLevel = 20;
+    
     private Level _currentLevel;
     private Player _currentPlayer;
     private Entity _spider;
@@ -27,8 +28,7 @@ public class Engine : Game
     private EasyRenderer _renderer;
     private BillboardRenderer _billboardRenderer;
     private HealthBarRenderer _healthBarRenderer;
-
-    private readonly List<Entity> _entities = [];
+    private LightMap _lightMap;
     
     private bool _isResizing;
 
@@ -65,8 +65,8 @@ public class Engine : Game
         Window.AllowUserResizing = true;
         
         Graphics = new GraphicsDeviceManager(this);
-        Graphics.PreferredBackBufferWidth = TargetWidth;
-        Graphics.PreferredBackBufferHeight = TargetHeight;
+        Graphics.PreferredBackBufferWidth = TargetWidth * 2;
+        Graphics.PreferredBackBufferHeight = TargetHeight * 2;
         
         Graphics.ApplyChanges();
         
@@ -97,16 +97,24 @@ public class Engine : Game
             Position = new Vec2(10, 5),
             Direction = new Vec2(-1, 0),
         };
+        _currentLevel.Spawn(_currentPlayer);
 
         _spider = new Spider
         {
             Position = new Vec2(10, 2),
             Target = _currentPlayer,
         };
+        _currentLevel.Spawn(_spider);
+
         _viewModel = new ViewModel(_currentPlayer);
         
-        _entities.Add(_currentPlayer);
-        _entities.Add(_spider);
+        _lightMap.Bake(_currentLevel, [
+        new Light
+        {
+            Position = new Vec2(5, 2),
+            Intensity = 1.0f,
+            Radius = 2.0f,
+        }]);
     }
 
     protected override void Update(GameTime gameTime)
@@ -131,9 +139,15 @@ public class Engine : Game
             _currentPlayer.Damage(damageInfo);
         }
         
-        for (int i = 0; i < _entities.Count; ++i)
+        for (int i = _currentLevel.Entities.Count-1; i >= 0; --i)
         {
-            _entities[i].Update(_currentLevel, deltaTime);
+            var entity = _currentLevel.Entities[i];
+            if (entity.Health <= 0)
+            {
+                _currentLevel.Remove(entity);
+                continue;
+            }
+            _currentLevel.Entities[i].Update(_currentLevel, deltaTime);
         }
         
         _viewModel.Update(deltaTime);
@@ -147,13 +161,24 @@ public class Engine : Game
 
         _renderer.Render(_currentLevel, _currentPlayer);
 
-        _billboardRenderer.Render(_renderBuffer, _currentPlayer,[new Sprite
+        List<Sprite> sprites = [];
+        for(int i = 0; i < _currentLevel.Entities.Count; ++i)
         {
-            Position = _spider.Position,
-            Texture = SpriteManager.Get(Sprites.SpiderSheet).Texture,
-            SourceRectangle = new Rectangle(0, 0, 256, 256),
-            Entity = _spider,
-        }], _renderer.WallDepth);
+            var entity = _currentLevel.Entities[i];
+
+            if(entity.Health <= 0) continue;
+            
+            var texture = entity is Projectile ? SpriteManager.Get(Sprites.FireballSheet).Texture : SpriteManager.Get(Sprites.SpiderSheet).Texture;
+            sprites.Add(new Sprite
+            {
+                Position = entity.Position,
+                Texture = texture,
+                SourceRectangle = new Rectangle(0, 0, 256, 256),
+                Entity = entity,
+            });
+        }
+
+        _billboardRenderer.Render(_renderBuffer, _currentPlayer, sprites, _renderer.WallDepth);
         
         _healthBarRenderer.Render(_renderBuffer, _renderer.WallDepth);
         

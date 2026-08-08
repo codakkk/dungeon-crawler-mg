@@ -22,6 +22,8 @@ public static class Sprites
     public const string WorldMap = "world_map";
     public const string SpiderSheet = "spider";
     public const string KnifeHandSheet = "knife_hand";
+
+    public const string FireballSheet = "fireball";
 }
 
 public static class SpriteManager
@@ -33,6 +35,7 @@ public static class SpriteManager
         RegisterFromContent(content, Core.Sprites.WorldMap, "wolftextures");
         RegisterFromContent(content, Core.Sprites.SpiderSheet, "spider_sheet");
         RegisterFromContent(content, Core.Sprites.KnifeHandSheet, "knife_hand_sheet");
+        RegisterFromContent(content, Core.Sprites.FireballSheet, "fireball_sheet");
     }
 
     public static void RegisterFromContent(ContentManager content, string name, string resourceName)

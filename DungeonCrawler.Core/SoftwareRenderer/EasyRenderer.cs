@@ -14,6 +14,9 @@ public class EasyRenderer
     
     public double[] WallDepth { get; }
     
+    private int[] _fogByRow = [];
+    private int _fogTableHeight = -1;
+    
     public EasyRenderer(RenderBuffer buffer, uint clearColor)
     {
         _renderBuffer = buffer;
@@ -28,57 +31,53 @@ public class EasyRenderer
         _textureColors = new uint[noOfTextures][];
         
         WallDepth = new double[buffer.Width * buffer.Height];
-        for (int i = 0; i < noOfTextures; ++i)
+        for (var i = 0; i < noOfTextures; ++i)
         {
             var ctex = new uint[blockSize * blockSize];
             _textureColors[i] = ctex;
-            for(int x = 0; x < blockSize; ++x)
-            for(int y = 0; y < blockSize; ++y)
+            for(var x = 0; x < blockSize; ++x)
+            for(var y = 0; y < blockSize; ++y)
             {
                 ctex[y + x * blockSize] = texture.Data[(i * blockSize + x) + y * textureWidth];
             }
         }
+        
+        BuildFogTable(_renderBuffer.Height);
     }
     
-    public void Render(Level level, Player player)
-    {
-        PrepareBuffer(level, player);
-    }
-    
-    private void PrepareBuffer(Level level, Player player)
+    public void Render(Level level, Player player, LightMap lightMap)
     {
         _renderBuffer.Clear(ClearColor);
         
         RenderCeilAndFloor(level, player);
         
-        RenderWalls(level, player);
+        RenderWalls(level, player, lightMap);
     }
 
-    private void RenderWalls(Level level, Player player)
+    private void RenderWalls(Level level, Player player, LightMap lightMap)
     {
-        int targetWidth = _renderBuffer.Width;
-        int targetHeight = _renderBuffer.Height;
+        var targetWidth = _renderBuffer.Width;
+        var targetHeight = _renderBuffer.Height;
         
-        for (int x = 0; x < _renderBuffer.Width; x++)
+        for (var x = 0; x < _renderBuffer.Width; x++)
         {
             // Calculate ray position and direction
-            double cameraX = 2 * x / (double)targetWidth - 1; // x-coordinate in camera space [-1, 1] with center on 0
-            
-            double rayDirX = player.Direction.X + player.Plane.X * cameraX;
-            double rayDirY = player.Direction.Z + player.Plane.Z * cameraX;
+            var cameraX = 2 * x / (double)targetWidth - 1; // x-coordinate in camera space [-1, 1] with center on 0
 
-            int mapX = player.TileX;
-            int mapZ = player.TileZ;
+            var rayDir = player.Direction + player.Plane * cameraX;
+
+            var mapX = player.TileX;
+            var mapZ = player.TileZ;
             
-            double deltaDistX = rayDirX == 0 ? double.PositiveInfinity : Math.Abs(1.0f / rayDirX);
-            double deltaDistY = rayDirY == 0 ? double.PositiveInfinity : Math.Abs(1.0f / rayDirY);
+            var deltaDistX = rayDir.X == 0 ? double.PositiveInfinity : Math.Abs(1.0f / rayDir.X);
+            var deltaDistY = rayDir.Z == 0 ? double.PositiveInfinity : Math.Abs(1.0f / rayDir.Z);
 
             double sideDistX, sideDistZ;
             
             // X/Z direction to step
             int stepX, stepZ;
 
-            if (rayDirX >= 0)
+            if (rayDir.X >= 0)
             {
                 stepX = 1;
                 sideDistX = (mapX + 1.0f - player.Position.X) * deltaDistX;
@@ -89,7 +88,7 @@ public class EasyRenderer
                 sideDistX = (player.Position.X - mapX) * deltaDistX;
             }
             
-            if (rayDirY >= 0)
+            if (rayDir.Z >= 0)
             {
                 stepZ = 1;
                 sideDistZ = (mapZ + 1.0f - player.Position.Z) * deltaDistY;
@@ -100,12 +99,12 @@ public class EasyRenderer
                 sideDistZ = (player.Position.Z - mapZ) * deltaDistY;
             }
 
-            int hitCount = 0;
+            var hitCount = 0;
             
             // NS or EW wall
-            int side = 0;
-            int totalSteps = 0;
-            int tile = Level.Air;
+            var side = 0;
+            var totalSteps = 0;
+            var tile = Level.Air;
 
             while (hitCount == 0 && totalSteps < 128)
             {
@@ -140,90 +139,94 @@ public class EasyRenderer
             WallDepth[x] = perpendicularWallDistance;
             
             // h of line to draw
-            int lineHeight = (int)(targetHeight / perpendicularWallDistance);
+            var lineHeight = (int)(targetHeight / perpendicularWallDistance);
 
-            int drawStart = -lineHeight / 2 + targetHeight / 2;
+            var drawStart = -lineHeight / 2 + targetHeight / 2;
             if(drawStart < 0)
             {
                 drawStart = 0;
             }
             
-            int drawEnd = lineHeight / 2 + targetHeight / 2;
+            var drawEnd = lineHeight / 2 + targetHeight / 2;
             if (drawEnd >= targetHeight)
             {
                 drawEnd = targetHeight - 1;
             }
             
-            int textureIdx = level.At(mapX, mapZ);
-            double wallX = 0;
-
-            if (side == 0) wallX = player.Position.Z + perpendicularWallDistance * rayDirY;
-            else wallX = player.Position.X + perpendicularWallDistance * rayDirX;
-
+            var textureIdx = level.At(mapX, mapZ);
+            
+            var hit = player.Position + new Vec2(rayDir.X, rayDir.Z) * perpendicularWallDistance;
+            var wallX = side == 0 ? hit.Z : hit.X;
             wallX -= Math.Floor(wallX);
 
             const int texWidth = 64;
             const int texHeight = 64;
             
-            int texX = (int)(wallX * texWidth);
+            var texX = (int)(wallX * texWidth);
             switch (side)
             {
-                case 0 when rayDirX > 0:
-                case 1 when rayDirY < 0:
+                case 0 when rayDir.X > 0:
+                case 1 when rayDir.Z < 0:
                     texX = texWidth - texX - 1;
                     break;
             }
 
-            double step = 1.0 * texHeight / lineHeight;
-            double texPos = (drawStart - (double)targetHeight / 2 + (double)lineHeight / 2) * step;
+            var step = 1.0 * texHeight / lineHeight;
+            var texPos = (drawStart - (double)targetHeight / 2 + (double)lineHeight / 2) * step;
 
-            for (int y = drawStart; y < drawEnd; y++)
+            var brightness = lightMap.Brightness(hit, []);
+            var fog = RenderBuffer.FogAmount(perpendicularWallDistance);
+            
+            for (var y = drawStart; y < drawEnd; y++)
             {
-                var dither = ((x ^ y) & 1) * 8;
-                int fog = RenderBuffer.FogAmount(perpendicularWallDistance + dither, 1.0f, 5.0f) & ~15;
-                
-                int texY = (int)texPos & (texHeight - 1);
+                //var dither = ((x ^ y) & 1) * 8;
+                //int fog = RenderBuffer.FogAmount(perpendicularWallDistance + dither, 3.0f, 8.0f) & ~15;
+                var texY = (int)texPos & (texHeight - 1);
                 texPos += step;
                 var texture = _textureColors[textureIdx-1]; // -1 so we can use all the sheet's image
-                var color = texture[texY + texX * texHeight];
+                var texel = texture[texY + texX * texHeight];
+                
+                if (side == 1) texel = (texel >> 1) & 8355711;
 
-                if (side == 1) color = (color >> 1) & 8355711;
-                _renderBuffer.SetPixel(x, y, RenderBuffer.Blend(color, Colors.Fog, fog));
+                texel = RenderBuffer.Shade(texel, brightness);
+                _renderBuffer.SetPixel(x, y, RenderBuffer.Blend(texel, Colors.Fog, fog));
             }
         }
     }
     
     private void RenderCeilAndFloor(Level level, Player player)
     {
-        int halfHeight = _renderBuffer.Height / 2;
+        var halfHeight = _renderBuffer.Height / 2;
 
         // Eye height in pixels: 0.5 world units, scaled by pixels-per-unit.
-        double camHeightPixels = 0.5 * _renderBuffer.Height;
+        var camHeightPixels = 0.5 * _renderBuffer.Height;
 
         // Rays through the left and right edges of the screen.
-        double rayDirX0 = player.Direction.X - player.Plane.X;  
-        double rayDirZ0 = player.Direction.Z - player.Plane.Z;
-        double rayDirX1 = player.Direction.X + player.Plane.X;  
-        double rayDirZ1 = player.Direction.Z + player.Plane.Z;
+        var rayDirX0 = player.Direction.X - player.Plane.X;  
+        var rayDirZ0 = player.Direction.Z - player.Plane.Z;
+        var rayDirX1 = player.Direction.X + player.Plane.X;  
+        var rayDirZ1 = player.Direction.Z + player.Plane.Z;
 
-        for (int y = halfHeight + 1; y < _renderBuffer.Height; y++)
+        for (var y = halfHeight + 1; y < _renderBuffer.Height; y++)
         {
-            int p = y - halfHeight;
-            double rowDistance = camHeightPixels / p;
+            var p = y - halfHeight;
+            var rowDistance = camHeightPixels / p;
 
-            double stepX = rowDistance * (rayDirX1 - rayDirX0) / _renderBuffer.Width;
-            double stepZ = rowDistance * (rayDirZ1 - rayDirZ0) / _renderBuffer.Width;
+            var stepX = rowDistance * (rayDirX1 - rayDirX0) / _renderBuffer.Width;
+            var stepZ = rowDistance * (rayDirZ1 - rayDirZ0) / _renderBuffer.Width;
 
-            double worldX = player.Position.X + rowDistance * rayDirX0;
-            double worldZ = player.Position.Z + rowDistance * rayDirZ0;
-
-            for (int x = 0; x < _renderBuffer.Width; x++)
+            var worldX = player.Position.X + rowDistance * rayDirX0;
+            var worldZ = player.Position.Z + rowDistance * rayDirZ0;
+            var brightness = RenderBuffer.Brightness(rowDistance, player.LightRadius);
+            var fog = _fogByRow[y];
+            
+            for (var x = 0; x < _renderBuffer.Width; x++)
             {
-                int cellX = (int)worldX;
-                int cellZ = (int)worldZ;
+                var cellX = (int)worldX;
+                var cellZ = (int)worldZ;
 
-                int tx = (int)(64 * (worldX - cellX)) & (64 - 1);
-                int ty = (int)(64 * (worldZ - cellZ)) & (64 - 1);
+                var tx = (int)(64 * (worldX - cellX)) & (64 - 1);
+                var ty = (int)(64 * (worldZ - cellZ)) & (64 - 1);
 
                 const int floorIdx = 3;
                 const int ceilIdx = 4;
@@ -231,10 +234,42 @@ public class EasyRenderer
                 worldX += stepX;
                 worldZ += stepZ;
 
-                _renderBuffer.SetPixel(x, y, _textureColors[ceilIdx][tx + ty * 64]);
-                _renderBuffer.SetPixel(x, _renderBuffer.Height - y - 1, _textureColors[floorIdx][tx + ty * 64]);
+                var texel = _textureColors[ceilIdx][tx + ty * 64];
+                texel = RenderBuffer.Shade(texel, brightness);
+                
+                _renderBuffer.SetPixel(x, y, RenderBuffer.Blend(texel, Colors.Fog, fog));
+                
+                texel = _textureColors[floorIdx][tx + ty * 64];
+                texel = RenderBuffer.Shade(texel, brightness);
+                _renderBuffer.SetPixel(x, _renderBuffer.Height - y - 1, RenderBuffer.Blend(texel, Colors.Fog, fog));
             }
         }
     }
     
+    private void BuildFogTable(int height)
+    {
+        if (_fogTableHeight == height) return;
+
+        _fogByRow = new int[height];
+
+        var halfHeight = height / 2;
+        var camHeightPixels = 0.5 * height;
+
+        for (var y = 0; y < height; y++)
+        {
+            var p = y - halfHeight;
+
+            // At or above the horizon there is no floor — infinitely far, so
+            // fully fogged. This also avoids dividing by zero at p == 0.
+            if (p <= 0)
+            {
+                _fogByRow[y] = 256;
+                continue;
+            }
+
+            _fogByRow[y] = RenderBuffer.FogAmount(camHeightPixels / p);
+        }
+
+        _fogTableHeight = height;
+    }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
+using DungeonCrawler.Core.Entities;
 using DungeonCrawler.Core.Maths;
 
 namespace DungeonCrawler.Core;
@@ -15,14 +17,17 @@ public class Level
 
     public int[] _tiles;
 
+    private List<Entity> _entities = [];
+
+    public IReadOnlyList<Entity> Entities => _entities;
+
     public Level(int width, int depth)
     {
         Width = width;
         Depth = depth;
         
         _tiles = new int[width * depth];
-        _tiles.AsSpan().Fill(Air);
-        
+        _tiles.AsSpan().Fill(Air);   
     }
 
     public int At(int x, int z)
@@ -73,4 +78,19 @@ public class Level
         return false;
     }
     
+    public bool Spawn(Entity entity)
+    {
+        if (IsBlocked(entity.Position, entity.Radius))
+        {
+            return false;
+        }
+
+        _entities.Add(entity);
+        return true;
+    }
+
+    public bool Remove(Entity entity)
+    {
+        return _entities.Remove(entity);
+    }
 }

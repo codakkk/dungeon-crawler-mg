@@ -97,8 +97,9 @@ public class BillboardRenderer
                     }
 
                     if (item.Entity.FlashTime > 0.0f) texel = 0xFFFFFFFF; 
-                    
-                    buffer.SetPixel(stripe, y, texel);
+                    var dither = ((stripe ^ y) & 1) * 8;
+                    int fog = RenderBuffer.FogAmount(item.Depth + dither, 3.0f, 8.0f) & ~15;
+                    buffer.SetPixel(stripe, y, RenderBuffer.Blend(texel, Colors.Fog, fog));
                 }
             }
         }

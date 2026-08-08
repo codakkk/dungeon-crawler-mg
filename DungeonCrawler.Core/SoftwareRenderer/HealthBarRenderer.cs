@@ -20,6 +20,8 @@ public class HealthBarRenderer
             var item = data[i];
             
             var entity = item.Entity;
+
+            if(entity.Health == entity.MaxHealth) continue;
             var size = item.SpriteSize;
             
             if(size <= 0)
@@ -41,13 +43,14 @@ public class HealthBarRenderer
             for (int y = barY; y < barY + barHeight; ++y)
             {
                 if(y < 0 || y >= buffer.Height) continue;
-                for (int x = barX; x < barX + barWidth; ++x)
+                for (int x = Math.Max(0, barX); x < Math.Min(buffer.Width, barX + barWidth); x++)
                 {
                     if(x < 0 || x >= buffer.Width) continue;
                     
                     if (item.Depth >= wallDepth[x]) continue;
-                    
-                    buffer.SetPixel(x, y, Colors.EnemyHealth);
+                    bool filled = x - barX < fillW;
+                    var color = filled ? Colors.EnemyHealth : Colors.EmptyEnemyHealth;
+                    buffer.SetPixel(x, y, color);
                 }
             }
         }

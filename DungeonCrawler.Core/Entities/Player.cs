@@ -30,8 +30,11 @@ public class Player : Entity
     public double TurnSpeed { get; set; } = 5.0f;
     public double Turn { get; set; }
 
+    public int LightRadius { get; set; } = 0;
+    
     public Player()
     {
+        Radius = 0.5;
         Health = MaxHealth = 10;
     }
     
@@ -40,6 +43,27 @@ public class Player : Entity
         var keyboardState = Keyboard.GetState();
         
         UpdateMovement(level, keyboardState, deltaTime);
+
+        if(keyboardState.IsKeyDown(Keys.Space))
+        {
+            level.Spawn(new Projectile
+            {
+                Position = Position + Direction * (Radius + 0.1),
+                Velocity = Direction * 10,
+                DamageInfo = new DamageInfo(1, 0.0f, 0.5f, Direction),
+                Owner = this
+            });
+        }
+
+        if (keyboardState.IsKeyDown(Keys.T))
+        {
+            LightRadius++;
+        }
+        
+        if (keyboardState.IsKeyDown(Keys.Y))
+        {
+            Engine.AmbientLevel++;
+        }
         
         base.Update(level, deltaTime);
     }
