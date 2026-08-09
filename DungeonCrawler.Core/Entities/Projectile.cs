@@ -6,6 +6,8 @@ public class Projectile : Entity
     public double Lifetime = 3.0;
     public DamageInfo DamageInfo { get; set; }
     public Entity Owner { get; init; }
+    
+    
 
     public Projectile()
     {

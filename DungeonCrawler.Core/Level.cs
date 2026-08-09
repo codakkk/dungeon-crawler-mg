@@ -15,7 +15,7 @@ public class Level
     
     public int Depth { get; }
 
-    public int[] _tiles;
+    public int[] Tiles;
 
     private List<Entity> _entities = [];
 
@@ -26,13 +26,13 @@ public class Level
         Width = width;
         Depth = depth;
         
-        _tiles = new int[width * depth];
-        _tiles.AsSpan().Fill(Air);   
+        Tiles = new int[width * depth];
+        Tiles.AsSpan().Fill(Air);   
     }
 
     public int At(int x, int z)
     {
-        return _tiles[x + z * Width];
+        return Tiles[x + z * Width];
     }
 
     public void SetAt(int x, int z, int tile)
@@ -42,19 +42,19 @@ public class Level
             return;
         }
         
-        _tiles[x + z * Width] = tile;
+        Tiles[x + z * Width] = tile;
     }
 
     public bool IsSolid(int x, int z)
     {
-        return _tiles[x + z * Width] > Air;
+        return Tiles[x + z * Width] > Air;
     }
 
     public void Set(int[,] tiles)
     {
-        for (int x = 0; x < tiles.GetLength(0); x++)
+        for (var x = 0; x < tiles.GetLength(0); x++)
         {
-            for (int z = 0; z < tiles.GetLength(1); z++)
+            for (var z = 0; z < tiles.GetLength(1); z++)
             {
                 var tile = tiles[x, z];
                 
@@ -70,7 +70,7 @@ public class Level
 
                 else
                 {
-                    _tiles[x + z * Width] = tiles[x, z];
+                    Tiles[x + z * Width] = tiles[x, z];
                 }
             }
         }
@@ -83,10 +83,10 @@ public class Level
         var minZ = (int)Math.Floor(position.Z - radius);
         var maxZ = (int)Math.Floor(position.Z + radius);
 
-        for (int zz = minZ; zz <= maxZ; ++zz)
-        for (int xx = minX; xx <= maxX; ++xx)
+        for (var zz = minZ; zz <= maxZ; ++zz)
+        for (var xx = minX; xx <= maxX; ++xx)
         {
-            var isSolid = _tiles[xx + zz * Width] > Air;
+            var isSolid = Tiles[xx + zz * Width] > Air;
             if (isSolid) return true;
         }
 

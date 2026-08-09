@@ -52,31 +52,32 @@ public class RenderBuffer : IDisposable
         _pixels[x + y * Width] = color;
     }
 
-    public void RenderSprite(int x, int y, Texture2D texture, Rectangle source, uint color = 0xFFFFFF)
+    public void RenderSprite(int x, int y, Texture2D texture, Rectangle source, uint color = 0xFFFFFF, Shade3 shade = default)
     {
-        int texWidth = texture.Width;
-        int texHeight = texture.Height;
+        var texWidth = texture.Width;
+        var texHeight = texture.Height;
         
         // slow must cache soon
-        if (!_textureColors.TryGetValue(texture, out uint[] colors))
+        if (!_textureColors.TryGetValue(texture, out var colors))
         {
             colors = new uint[texWidth * texHeight];
             _textureColors.Add(texture, colors);
             texture.GetData(colors);
         }
 
-        int dx = x;
-        for (int xx = source.X; xx < source.X + source.Width; xx++)
+        var dx = x;
+        for (var xx = source.X; xx < source.X + source.Width; xx++)
         {
-            int dy = y;
-            for (int yy = source.Y; yy < source.Y + source.Height; yy++)
+            var dy = y;
+            for (var yy = source.Y; yy < source.Y + source.Height; yy++)
             {
                 if (dx < 0 || dx >= Width || dy < 0 || dy >= Height) continue;
                 
                 var currColor = colors[xx + yy * texWidth];
                 if (currColor >> 24 > 128)
                 {
-                    _pixels[dx + dy * Width] = currColor;
+                    
+                    _pixels[dx + dy * Width] = Shade(currColor, shade);
                 }
 
                 dy++;
@@ -125,16 +126,16 @@ public class RenderBuffer : IDisposable
 
     public static int FogAmount(double depth, double fogStart = 3.0f, double fogEnd = 14.0f)
     {
-        double t = (depth - fogStart) / (fogEnd - fogStart);
+        var t = (depth - fogStart) / (fogEnd - fogStart);
         return (int)(Math.Clamp(t, 0.0f, 1.0f) * 256.0f);
     }
 
     public static uint Blend(uint src, uint dst, int amount)
     {
-        int inv = 256 - amount;
+        var inv = 256 - amount;
 
-        uint rb = ((src & 0x00FF00FFu) * (uint)inv + (dst & 0x00FF00FFu) * (uint)amount) >> 8;
-        uint g = ((src & 0x0000FF00u) * (uint)inv + (dst & 0x0000FF00u) * (uint)amount) >> 8;
+        var rb = ((src & 0x00FF00FFu) * (uint)inv + (dst & 0x00FF00FFu) * (uint)amount) >> 8;
+        var g = ((src & 0x0000FF00u) * (uint)inv + (dst & 0x0000FF00u) * (uint)amount) >> 8;
         
         return (rb & 0x00FF00FFu) | (g & 0x0000FF00u) | 0xFF000000u;
     }

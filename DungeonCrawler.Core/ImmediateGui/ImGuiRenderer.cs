@@ -40,7 +40,7 @@ public class ImGuiRenderer
     // Input
     private int _scrollWheelValue;
     private int _horizontalScrollWheelValue;
-    private readonly float WHEEL_DELTA = 120;
+    private readonly float _wheelDelta = 120;
     private Keys[] _allKeys = Enum.GetValues<Keys>();
 
     public ImGuiRenderer(Game game)
@@ -76,21 +76,21 @@ public class ImGuiRenderer
     {
         // Get font texture from ImGui
         var io = ImGui.GetIO();
-        io.Fonts.GetTexDataAsRGBA32(out byte* pixelData, out int width, out int height, out int bytesPerPixel);
+        io.Fonts.GetTexDataAsRGBA32(out byte* pixelData, out var width, out var height, out var bytesPerPixel);
 
         // Copy the data to a managed array
         var pixels = new byte[width * height * bytesPerPixel];
         unsafe { Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length); }
 
         // Create and register the texture as an XNA texture
-        var tex2d = new Texture2D(_graphicsDevice, width, height, false, SurfaceFormat.Color);
-        tex2d.SetData(pixels);
+        var tex2D = new Texture2D(_graphicsDevice, width, height, false, SurfaceFormat.Color);
+        tex2D.SetData(pixels);
 
         // Should a texture already have been build previously, unbind it first so it can be deallocated
         if (_fontTextureId.HasValue) UnbindTexture(_fontTextureId.Value);
 
         // Bind the new texture to an ImGui-friendly id
-        _fontTextureId = BindTexture(tex2d);
+        _fontTextureId = BindTexture(tex2D);
 
         // Let ImGui know where to find the texture
         io.Fonts.SetTexID(_fontTextureId.Value);
@@ -207,14 +207,14 @@ public class ImGuiRenderer
         io.AddMouseButtonEvent(4, mouse.XButton2 == ButtonState.Pressed);
 
         io.AddMouseWheelEvent(
-            (mouse.HorizontalScrollWheelValue - _horizontalScrollWheelValue) / WHEEL_DELTA,
-            (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
+            (mouse.HorizontalScrollWheelValue - _horizontalScrollWheelValue) / _wheelDelta,
+            (mouse.ScrollWheelValue - _scrollWheelValue) / _wheelDelta);
         _scrollWheelValue = mouse.ScrollWheelValue;
         _horizontalScrollWheelValue = mouse.HorizontalScrollWheelValue;
 
         foreach (var key in _allKeys)
         {
-            if (TryMapKeys(key, out ImGuiKey imguikey))
+            if (TryMapKeys(key, out var imguikey))
             {
                 io.AddKeyEvent(imguikey, keyboard.IsKeyDown(key));
             }
@@ -355,12 +355,12 @@ public class ImGuiRenderer
         }
 
         // Copy ImGui's vertices and indices to a set of managed byte arrays
-        int vtxOffset = 0;
-        int idxOffset = 0;
+        var vtxOffset = 0;
+        var idxOffset = 0;
 
-        for (int n = 0; n < drawData.CmdListsCount; n++)
+        for (var n = 0; n < drawData.CmdListsCount; n++)
         {
-            ImDrawListPtr cmdList = drawData.CmdLists[n];
+            var cmdList = drawData.CmdLists[n];
 
             fixed (void* vtxDstPtr = &_vertexData[vtxOffset * DrawVertDeclaration.Size])
             fixed (void* idxDstPtr = &_indexData[idxOffset * sizeof(ushort)])
@@ -383,16 +383,16 @@ public class ImGuiRenderer
         _graphicsDevice.SetVertexBuffer(_vertexBuffer);
         _graphicsDevice.Indices = _indexBuffer;
 
-        int vtxOffset = 0;
-        int idxOffset = 0;
+        var vtxOffset = 0;
+        var idxOffset = 0;
 
-        for (int n = 0; n < drawData.CmdListsCount; n++)
+        for (var n = 0; n < drawData.CmdListsCount; n++)
         {
-            ImDrawListPtr cmdList = drawData.CmdLists[n];
+            var cmdList = drawData.CmdLists[n];
 
-            for (int cmdi = 0; cmdi < cmdList.CmdBuffer.Size; cmdi++)
+            for (var cmdi = 0; cmdi < cmdList.CmdBuffer.Size; cmdi++)
             {
-                ImDrawCmdPtr drawCmd = cmdList.CmdBuffer[cmdi];
+                var drawCmd = cmdList.CmdBuffer[cmdi];
 
                 if (drawCmd.ElemCount == 0) 
                 {

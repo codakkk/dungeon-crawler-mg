@@ -124,7 +124,7 @@ public class Engine : Game
         };
         _currentLevel.Spawn(_spider);
 
-        for (int i = 0; i < _currentLevel.Entities.Count; ++i)
+        for (var i = 0; i < _currentLevel.Entities.Count; ++i)
         {
             var entity = _currentLevel.Entities[i];
             
@@ -146,6 +146,8 @@ public class Engine : Game
         // Create the ImGui renderer.
         ImGuiRenderer = new ImGuiRenderer(this);
         ImGuiRenderer.RebuildFontAtlas();
+        
+        _currentPlayer.UpdateAspect(Window.ClientBounds.Width, Window.ClientBounds.Height);
     }
 
     protected override void LoadContent()
@@ -156,7 +158,7 @@ public class Engine : Game
 
     protected override void Update(GameTime gameTime)
     {
-        float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
         
         var keyboardState = Keyboard.GetState();
         
@@ -183,7 +185,7 @@ public class Engine : Game
             _currentPlayer.Damage(damageInfo);
         }
         
-        for (int i = _currentLevel.Entities.Count-1; i >= 0; --i)
+        for (var i = _currentLevel.Entities.Count-1; i >= 0; --i)
         {
             var entity = _currentLevel.Entities[i];
             if (entity.Health <= 0)
@@ -212,36 +214,44 @@ public class Engine : Game
         _renderer.Render(_currentLevel, _currentPlayer, _lightMap);
 
         List<Sprite> sprites = [];
-        for(int i = 0; i < _currentLevel.Entities.Count; ++i)
+        for(var i = 0; i < _currentLevel.Entities.Count; ++i)
         {
             var entity = _currentLevel.Entities[i];
 
             if(entity is Player || entity.Health <= 0) continue;
-            
-            // we have to find a better way soon lol
-            var texture = entity switch
-            {
-                Projectile => SpriteManager.Get(Sprites.FireballSheet).Texture,
-                Spider => SpriteManager.Get(Sprites.SpiderSheet).Texture,
-                Torch => SpriteManager.Get(Sprites.TorchSheet).Texture,
-            };
 
-            var index = entity is Torch torch ? torch.AnimIndex : 0; 
-            
-            sprites.Add(new Sprite
+            if (entity.Sprite != null)
             {
-                Position = entity.Position,
-                Texture = texture,
-                SourceRectangle = new Rectangle(index * 256, 0, 256, 256),
-                Entity = entity,
-            });
+                sprites.Add(entity.Sprite);
+            }
+            else
+            {
+                
+                // we have to find a better way soon lol
+                var texture = entity switch
+                {
+                    Projectile => SpriteManager.Get(Sprites.FireballSheet).Texture,
+                    Spider => SpriteManager.Get(Sprites.SpiderSheet).Texture,
+                    Torch => SpriteManager.Get(Sprites.TorchSheet).Texture,
+                };
+
+                var index = entity is Torch torch ? torch.AnimIndex : 0; 
+                
+                sprites.Add(new Sprite
+                {
+                    Position = entity.Position,
+                    Texture = texture,
+                    SourceRectangle = new Rectangle((1+index) * 256, 0, 256, 256),
+                    Entity = entity,
+                });
+            }
         }
 
-        _billboardRenderer.Render(_renderBuffer, _currentPlayer, sprites, _renderer.WallDepth);
+        _billboardRenderer.Render(_renderBuffer, _currentPlayer, _lightMap, sprites, _renderer.WallDepth);
         
         _healthBarRenderer.Render(_renderBuffer, _renderer.WallDepth);
         
-        _viewModel.Render(_renderBuffer, SpriteManager.GetTexture(Sprites.KnifeHandSheet));
+        _viewModel.Render(_renderBuffer, _lightMap, SpriteManager.GetTexture(Sprites.HandTorchSheet), SpriteManager.GetTexture(Sprites.HandFireballSheet));
         
         SpriteBatch.Begin(
             SpriteSortMode.Deferred, 
@@ -333,11 +343,11 @@ public class Engine : Game
         
         // ---- Left column: list + footer button ----
         ImGui.BeginGroup();
-        float footer = ImGui.GetFrameHeightWithSpacing();       // button height + item spacing
+        var footer = ImGui.GetFrameHeightWithSpacing();       // button height + item spacing
         
-        int toDelete = -1;
+        var toDelete = -1;
         ImGui.BeginChild("Lights", new System.Numerics.Vector2(180, -footer), ImGuiChildFlags.Borders);
-        for (int i = 0; i < lights.Count; ++i)
+        for (var i = 0; i < lights.Count; ++i)
         {
             ImGui.PushID(i);
             if (ImGui.Selectable($"Light {i}", _selected == i)) _selected = i;
@@ -391,7 +401,7 @@ public class Engine : Game
         var radius = light.Radius;
         var color = light.Color.ToNumerics();
         
-        bool changed = false;
+        var changed = false;
         changed |= ImGui.Checkbox("Enabled", ref enabled);
         changed |= ImGui.DragFloat2("Position", ref position, 0.05f);
         changed |= ImGui.DragFloat3("Color", ref color, 0.05f);

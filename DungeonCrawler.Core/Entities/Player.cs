@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Numerics;
 using DungeonCrawler.Core.Maths;
+using DungeonCrawler.Core.SoftwareRenderer.Lights;
 using Microsoft.Xna.Framework.Input;
 
 namespace DungeonCrawler.Core.Entities;
 
 public class Player : Entity
 {
-    public static float FOV = 0.889f;
+    public static float Fov = 0.889f;
     
     public Vec2 Direction { get; set; }
     
-    public Vec2 Plane { get; set; } = new(0f, FOV);
+    public Vec2 Plane { get; set; } = new(0f, Fov);
 
     public float PlaneHalfWidth { get; private set; }
 
@@ -31,7 +32,18 @@ public class Player : Entity
 
     public float TurnSpeed { get; set; } = 5.0f;
     public float Turn { get; set; }
-   
+    
+    public float AttackTime { get; set; }
+
+    public Light Torch => new()
+    {
+        Enabled = true,
+        Position = Position,
+        Intensity = 1.0f,
+        Radius = 10.0f,
+        Color = LightColor.Torch,
+    };
+    
     private InputHandler _inputHandler;
     
     public Player(InputHandler inputHandler)
@@ -43,10 +55,15 @@ public class Player : Entity
     
     public override void Update(Level level, float deltaTime)
     {
+        if (AttackTime > 0.0f)
+        {
+            AttackTime -= deltaTime;
+        }
         UpdateMovement(level, deltaTime);
 
-        if(_inputHandler.IsKeyJustPressed(Keys.Space))
+        if(_inputHandler.IsKeyJustPressed(Keys.Space) && AttackTime <= 0.001f)
         {
+            AttackTime = 1.0f;
             level.Spawn(new Projectile
             {
                 Position = Position + Direction * (Radius + 0.5f),
@@ -61,8 +78,8 @@ public class Player : Entity
 
     private void UpdateMovement(Level level, float deltaTime)
     {   
-        bool isRunning = _inputHandler.IsKeyDown(Keys.LeftShift);
-        float speed = (isRunning ? RunMultiplier : 1f) * MovementSpeed;
+        var isRunning = _inputHandler.IsKeyDown(Keys.LeftShift);
+        var speed = (isRunning ? RunMultiplier : 1f) * MovementSpeed;
         
         var forward = _inputHandler.Forward;
         var lateral = _inputHandler.Lateral;

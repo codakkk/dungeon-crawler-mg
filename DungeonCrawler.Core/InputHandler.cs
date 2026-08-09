@@ -20,17 +20,14 @@ public sealed class InputHandler(GameWindow window)
     {
         get
         {
-            if (_isMouseCaptured == false)
-            {
-                return 0.0f;
-            }
+            if (_isMouseCaptured == false) return 0.0f;
             
             var mouse = Mouse.GetState();
             
             var cx = window.ClientBounds.Width / 2;
             var cy = window.ClientBounds.Width / 2;
 
-            int deltaX = mouse.X - cx;
+            var deltaX = mouse.X - cx;
 
             if (deltaX != 0) Mouse.SetPosition(cx, cy);
 
@@ -47,7 +44,7 @@ public sealed class InputHandler(GameWindow window)
             _isMouseCaptured = false;
             IsMouseVisible = true;
         }
-        else if (_isMouseCaptured == false && mouseState.LeftButton == ButtonState.Pressed && !ImGui.IsAnyItemHovered() && !ImGui.IsAnyItemActive() && !ImGui.IsAnyItemFocused())
+        else if (_isMouseCaptured == false && JustClickedLeftButton() && !ImGui.IsAnyItemHovered() && !ImGui.IsAnyItemActive() && !ImGui.IsAnyItemFocused())
         {
             IsMouseVisible = false;
             _isMouseCaptured = true;

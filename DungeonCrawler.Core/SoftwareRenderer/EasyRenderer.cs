@@ -25,22 +25,22 @@ public class EasyRenderer
 
         ClearColor = clearColor;
 
-        const int blockSize = 64;
-        const int noOfTextures = 8; // texture.Width / blockSize;
-        const int textureWidth = blockSize * noOfTextures;
+        const int BlockSize = 64;
+        const int NoOfTextures = 8; // texture.Width / blockSize;
+        const int TextureWidth = BlockSize * NoOfTextures;
         var texture = SpriteManager.Get("world_map");
 
-        _textureColors = new uint[noOfTextures][];
+        _textureColors = new uint[NoOfTextures][];
 
         WallDepth = new float[buffer.Width * buffer.Height];
-        for (var i = 0; i < noOfTextures; ++i)
+        for (var i = 0; i < NoOfTextures; ++i)
         {
-            var ctex = new uint[blockSize * blockSize];
+            var ctex = new uint[BlockSize * BlockSize];
             _textureColors[i] = ctex;
-            for (var x = 0; x < blockSize; ++x)
-            for (var y = 0; y < blockSize; ++y)
+            for (var x = 0; x < BlockSize; ++x)
+            for (var y = 0; y < BlockSize; ++y)
             {
-                ctex[y + x * blockSize] = texture.Data[(i * blockSize + x) + y * textureWidth];
+                ctex[y + x * BlockSize] = texture.Data[(i * BlockSize + x) + y * TextureWidth];
             }
         }
     }
@@ -131,7 +131,7 @@ public class EasyRenderer
                 }
             }
 
-            float perpendicularWallDistance = 0.0f;
+            var perpendicularWallDistance = 0.0f;
 
             if (side == 0) perpendicularWallDistance = sideDistX - deltaDistX;
             else perpendicularWallDistance = sideDistZ - deltaDistY;
@@ -159,41 +159,41 @@ public class EasyRenderer
             var wallX = side == 0 ? hit.Z : hit.X;
             wallX -= MathF.Floor(wallX);
 
-            const int texWidth = 64;
-            const int texHeight = 64;
+            const int TexWidth = 64;
+            const int TexHeight = 64;
 
-            var texX = (int)(wallX * texWidth);
+            var texX = (int)(wallX * TexWidth);
             switch (side)
             {
                 case 0 when rayDir.X > 0:
                 case 1 when rayDir.Z < 0:
-                    texX = texWidth - texX - 1;
+                    texX = TexWidth - texX - 1;
                     break;
             }
 
-            var step = 1.0 * texHeight / lineHeight;
+            var step = 1.0 * TexHeight / lineHeight;
             var texPos = (drawStart - (double)targetHeight / 2 + (double)lineHeight / 2) * step;
-
-            var brightness = lightMap.Illumination(hit, []);
-            int fog = RenderBuffer.FogAmount(perpendicularWallDistance);
+            
+            var brightness = lightMap.Illumination(hit, [player.Torch]);
+            // int fog = RenderBuffer.FogAmount(perpendicularWallDistance);
 
             for (var y = drawStart; y < drawEnd; y++)
             {
                 if (ApplyDithering)
                 {
                     var dither = ((x ^ y) & 1) * 8;
-                    fog = RenderBuffer.FogAmount(perpendicularWallDistance + dither, 3.0f, 8.0f) & ~15;
+                    // fog = RenderBuffer.FogAmount(perpendicularWallDistance + dither, 3.0f, 8.0f) & ~15;
                 }
 
-                var texY = (int)texPos & (texHeight - 1);
+                var texY = (int)texPos & (TexHeight - 1);
                 texPos += step;
                 var texture = _textureColors[textureIdx - 1]; // -1 so we can use all the sheet's image
-                var texel = texture[texY + texX * texHeight];
+                var texel = texture[texY + texX * TexHeight];
 
                 // if (side == 1) texel = (texel >> 1) & 8355711;
 
                 texel = RenderBuffer.Shade(texel, brightness);
-                _renderBuffer.SetPixel(x, y, RenderBuffer.Blend(texel, Colors.Fog, fog));
+                _renderBuffer.SetPixel(x, y, texel);
             }
         }
     }
@@ -231,11 +231,18 @@ public class EasyRenderer
             var worldZ = player.Position.Z + rowDistance * rayDirZ0;
             
             var brightness = Shade3.Full;
-
+            var playerTorch = new Light
+            {
+                Enabled = true,
+                Position = player.Position,
+                Color = LightColor.Torch,
+                Intensity = 1f,
+                Radius = 4.0f,
+            };
             for (var x = 0; x < _renderBuffer.Width; x++)
             {
                 if((x & (LightStep - 1)) == 0)
-                    brightness = lightMap.Illumination(new Vec2(worldX, worldZ), []);
+                    brightness = lightMap.Illumination(new Vec2(worldX, worldZ), [playerTorch]);
 
                 var cellX = (int)worldX;
                 var cellZ = (int)worldZ;

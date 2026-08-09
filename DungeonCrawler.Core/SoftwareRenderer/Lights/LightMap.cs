@@ -73,7 +73,7 @@ public class LightMap
     {
         var lit = AmbientLight + SampleStatic(position);
 
-        for (int i = 0; i < lights.Length; ++i)
+        for (var i = 0; i < lights.Length; ++i)
             lit += lights[i].ContributionAt(position);
         
         return lit.Clamped().ToShade3();

@@ -1,5 +1,6 @@
 ﻿using System;
 using DungeonCrawler.Core.Maths;
+using DungeonCrawler.Core.SoftwareRenderer;
 using Microsoft.Xna.Framework;
 
 namespace DungeonCrawler.Core.Entities;
@@ -32,6 +33,8 @@ public abstract class Entity
     
     public float StaggerResistance { get; protected set; }
     
+    public Sprite Sprite { get; set; }
+    
     public virtual void Update(Level level, float deltaTime)
     {
         if (Velocity.LengthSquared > 0.00001)
@@ -48,7 +51,7 @@ public abstract class Entity
 
     public bool Move(Level level, Vec2 delta, bool canIgnoreWalls = false)
     {
-        bool didMove = false;
+        var didMove = false;
         
         if (canIgnoreWalls)
         {

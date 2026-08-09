@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using DungeonCrawler.Core.Entities;
 using DungeonCrawler.Core.Maths;
+using DungeonCrawler.Core.SoftwareRenderer.Lights;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -36,11 +37,11 @@ public class BillboardRenderer
 
     public IReadOnlyList<BillboardRenderInfo> RenderData => _renderData;
     
-    public void Render(RenderBuffer buffer, Player player, List<Sprite> sprites, float[] wallDepth)
+    public void Render(RenderBuffer buffer, Player player, LightMap lightMap, List<Sprite> sprites, float[] wallDepth)
     {
         _renderData.Clear();
         
-        for (int i = 0; i < sprites.Count; i++)
+        for (var i = 0; i < sprites.Count; i++)
         {
             var item = ProcessItem(buffer, player, sprites[i]);
             _renderData.Add(item);
@@ -48,7 +49,7 @@ public class BillboardRenderer
         
         _renderData.Sort(FarToNear);
         
-        for (int i = 0; i < _renderData.Count; i++)
+        for (var i = 0; i < _renderData.Count; i++)
         {
             var item = _renderData[i];
             
@@ -68,14 +69,14 @@ public class BillboardRenderer
             var top = buffer.Height / 2 - size / 2;
 
             var startX = Math.Max(0, left);
-            int endX = Math.Min(buffer.Width, left + size);
-            int startY = Math.Max(0, top);
-            int endY = Math.Min(buffer.Height, top + size);
+            var endX = Math.Min(buffer.Width, left + size);
+            var startY = Math.Max(0, top);
+            var endY = Math.Min(buffer.Height, top + size);
             
-            for (int stripe = startX; stripe < endX; stripe++)
+            for (var stripe = startX; stripe < endX; stripe++)
             {
                 var texX = (stripe - left) * item.SpriteWidth / size;
-                for (int y = startY; y < endY; y++)
+                for (var y = startY; y < endY; y++)
                 {
                     if (item.Depth >= wallDepth[stripe])
                     {
@@ -83,17 +84,18 @@ public class BillboardRenderer
                     }
                     
                     var texY = (y - top) * item.SpriteHeight / size;
-                    uint texel = item.TextureData[texX + texY * item.SpriteWidth];
+                    var texel = item.TextureData[texX + texY * item.SpriteWidth];
 
                     if (texel >> 24 < AlphaThreshold)
                     {
                         continue;
                     }
 
-                    if (item.Entity.FlashTime > 0.0f) texel = 0xFFFFFFFF; 
                     var dither = ((stripe ^ y) & 1) * 8;
-                    int fog = RenderBuffer.FogAmount(item.Depth + dither, 3.0f, 8.0f) & ~15;
-                    buffer.SetPixel(stripe, y, RenderBuffer.Blend(texel, Colors.Fog, fog));
+                    var brightness = lightMap.Illumination(item.Entity.Position, [player.Torch]);
+                    texel = RenderBuffer.Shade(texel, brightness);
+                    if (item.Entity.FlashTime > 0.0f) texel = 0xFFFFFFFF; 
+                    buffer.SetPixel(stripe, y, texel);
                 }
             }
         }
@@ -132,7 +134,7 @@ public class BillboardRenderer
         if (depth > 0)
         {
             screenX = (int)((float)buffer.Width / 2 * (1 + lateral / depth));
-            float rawSize = buffer.Height / depth;
+            var rawSize = buffer.Height / depth;
             
             spriteSize = rawSize >= MaxSpriteSize ? MaxSpriteSize : (int)rawSize;
         }

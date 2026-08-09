@@ -22,9 +22,13 @@ public static class Sprites
     public const string WorldMap = "world_map";
     public const string SpiderSheet = "spider";
     public const string KnifeHandSheet = "knife_hand";
+    
+    public const string HandTorchSheet = "hand_torch_sheet";
 
     public const string FireballSheet = "fireball";
     public const string TorchSheet = "torch";
+    
+    public const string HandFireballSheet = "hand_fireball_sheet";
 }
 
 public static class SpriteManager
@@ -38,6 +42,8 @@ public static class SpriteManager
         RegisterFromContent(content, Core.Sprites.KnifeHandSheet, "knife_hand_sheet");
         RegisterFromContent(content, Core.Sprites.FireballSheet, "fireball_sheet");
         RegisterFromContent(content, Core.Sprites.TorchSheet, "torch_sheet");
+        RegisterFromContent(content, Core.Sprites.HandTorchSheet, "hand_torch_sheet");
+        RegisterFromContent(content, Core.Sprites.HandFireballSheet, "hand_fireball_sheet");
     }
 
     public static void RegisterFromContent(ContentManager content, string name, string resourceName)
