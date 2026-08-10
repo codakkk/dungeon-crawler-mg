@@ -19,16 +19,17 @@ public struct SpriteData
 
 public static class Sprites
 {
-    public const string WorldMap = "world_map";
-    public const string SpiderSheet = "spider";
-    public const string KnifeHandSheet = "knife_hand";
+    public const string WorldMap = "wolftextures";
+    public const string SpiderSheet = "spider_sheet";
+    public const string KnifeHandSheet = "knife_hand_sheet";
     
     public const string HandTorchSheet = "hand_torch_sheet";
 
-    public const string FireballSheet = "fireball";
-    public const string TorchSheet = "torch";
+    public const string FireballSheet = "fireball_sheet";
+    public const string TorchSheet = "torch_sheet";
     
     public const string HandFireballSheet = "hand_fireball_sheet";
+    public const string HandFireballIdleSheet = "hand_fireball_idle_sheet";
 }
 
 public static class SpriteManager
@@ -37,18 +38,19 @@ public static class SpriteManager
 
     public static void Initialize(ContentManager content)
     {
-        RegisterFromContent(content, Core.Sprites.WorldMap, "wolftextures");
-        RegisterFromContent(content, Core.Sprites.SpiderSheet, "spider_sheet");
-        RegisterFromContent(content, Core.Sprites.KnifeHandSheet, "knife_hand_sheet");
-        RegisterFromContent(content, Core.Sprites.FireballSheet, "fireball_sheet");
-        RegisterFromContent(content, Core.Sprites.TorchSheet, "torch_sheet");
-        RegisterFromContent(content, Core.Sprites.HandTorchSheet, "hand_torch_sheet");
-        RegisterFromContent(content, Core.Sprites.HandFireballSheet, "hand_fireball_sheet");
+        RegisterFromContent(content, Core.Sprites.WorldMap);
+        RegisterFromContent(content, Core.Sprites.SpiderSheet);
+        RegisterFromContent(content, Core.Sprites.KnifeHandSheet);
+        RegisterFromContent(content, Core.Sprites.FireballSheet);
+        RegisterFromContent(content, Core.Sprites.TorchSheet);
+        RegisterFromContent(content, Core.Sprites.HandTorchSheet);
+        RegisterFromContent(content, Core.Sprites.HandFireballSheet);
+        RegisterFromContent(content, Core.Sprites.HandFireballIdleSheet);
     }
 
-    public static void RegisterFromContent(ContentManager content, string name, string resourceName)
+    public static void RegisterFromContent(ContentManager content, string name)
     {
-        var texture = content.Load<Texture2D>(resourceName);
+        var texture = content.Load<Texture2D>(name);
         Register(name, texture);
     }
     

@@ -13,11 +13,27 @@ public readonly record struct DamageInfo(
 
 public abstract class Entity
 {
+    protected virtual bool ApplyDefaultMovement => true;
+    
     public Vec2 Position { get; set; }
     
     public Vec2 Velocity { get; set; }
+
+    public Vec2 Knockback { get; set; }
     
-    public int Health { get; set; }
+    public int Health
+    {
+        get;
+        set
+        {
+            field = value;
+
+            if (field <= 0)
+            {
+                OnDie();
+            }
+        }
+    }
     public int MaxHealth { get; set; }
 
     public bool IsAlive => Health > 0;
@@ -27,6 +43,12 @@ public abstract class Entity
     public int TileX => (int)Position.X;
     public int TileZ => (int)Position.Z;
 
+    /// <summary>
+    ///  Death time is used by death animations
+    ///  When an entity dies, IsAlive = false but DeathTime can be greater than 0 for animations
+    ///  
+    /// </summary>
+    public float DeathTime { get; protected set; }
     public float FlashTime { get; protected set; }
     public float StaggerTime { get; protected set; }
     public float InvulnerableTime { get; set; }
@@ -37,13 +59,19 @@ public abstract class Entity
     
     public virtual void Update(Level level, float deltaTime)
     {
-        if (Velocity.LengthSquared > 0.00001)
+        if (ApplyDefaultMovement)
         {
-            Move(level, Velocity * deltaTime);
-            Velocity *= MathF.Pow(0.02f, deltaTime);
+            var step = Velocity + Knockback;
+            if (step.LengthSquared > 0.00001f)
+                Move(level, step * deltaTime);
         }
-        else Velocity = Vec2.Zero;
+
+        if (Knockback.LengthSquared > 0.00001f)
+            Knockback *= MathF.Pow(0.02f, deltaTime);
+        else
+            Knockback = Vec2.Zero;
         
+        if (DeathTime > 0.0f) DeathTime = Math.Max(0.0f, DeathTime - deltaTime * 4);
         if (FlashTime > 0.0f) FlashTime = Math.Max(0.0f, FlashTime - deltaTime);
         if (StaggerTime > 0.0f) StaggerTime = Math.Max(0.0f, StaggerTime - deltaTime);
         if (InvulnerableTime > 0.0f) InvulnerableTime = Math.Max(0.0f, InvulnerableTime - deltaTime);
@@ -76,22 +104,20 @@ public abstract class Entity
         return didMove;
     }
 
-    public virtual void OnDie() {}
+    public virtual void OnDie()
+    {
+        DeathTime = 1.0f;
+    }
     
     public bool Damage(DamageInfo hit)
     {
         if (InvulnerableTime > 0.0f) return false;
         
-        Health -= hit.Amount;
         FlashTime = 0.25f;
         StaggerTime = Math.Max(StaggerTime, hit.Stagger * StaggerResistance);
         
-        Velocity += hit.Direction * hit.Knockback;
-        
-        if (Health < 0)
-        {
-            OnDie();
-        }
+        Knockback += hit.Direction * hit.Knockback;
+        Health -= hit.Amount;
 
         return true;
     }

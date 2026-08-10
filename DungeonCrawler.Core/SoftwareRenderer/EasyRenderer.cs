@@ -28,7 +28,7 @@ public class EasyRenderer
         const int BlockSize = 64;
         const int NoOfTextures = 8; // texture.Width / blockSize;
         const int TextureWidth = BlockSize * NoOfTextures;
-        var texture = SpriteManager.Get("world_map");
+        var texture = SpriteManager.Get(Sprites.WorldMap);
 
         _textureColors = new uint[NoOfTextures][];
 

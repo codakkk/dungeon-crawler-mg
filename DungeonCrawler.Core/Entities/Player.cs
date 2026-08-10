@@ -35,16 +35,11 @@ public class Player : Entity
     
     public float AttackTime { get; set; }
 
-    public Light Torch => new()
-    {
-        Enabled = true,
-        Position = Position,
-        Intensity = 1.0f,
-        Radius = 10.0f,
-        Color = LightColor.Torch,
-    };
+    public Light Torch { get; set; }
     
     private InputHandler _inputHandler;
+
+    private Light _torch;
     
     public Player(InputHandler inputHandler)
     {
@@ -55,6 +50,14 @@ public class Player : Entity
     
     public override void Update(Level level, float deltaTime)
     {
+        Torch = new Light
+        {
+            Enabled = true,
+            Position = Position,
+            Intensity = 0.5f,
+            Radius = 10.0f,
+            Color = LightColor.Torch,
+        };
         if (AttackTime > 0.0f)
         {
             AttackTime -= deltaTime;
@@ -68,7 +71,7 @@ public class Player : Entity
             {
                 Position = Position + Direction * (Radius + 0.5f),
                 Velocity = Direction * 10f,
-                DamageInfo = new DamageInfo(1, 0.0f, 0.5f, Direction),
+                DamageInfo = new DamageInfo(1, 0.0f, 100.5f, Direction),
                 Owner = this
             });
         }

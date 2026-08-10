@@ -10,27 +10,11 @@ namespace DungeonCrawler.Core;
 
 public class ViewModel(Player currentPlayer)
 {
-
     private double _bobPhase;
     private double _swayX, _swayY;
 
     private double _animTime;
     private double _attackAnimTime;
-    
-
-    public static Rectangle[] HandFireballTextures = [
-        new (0, 0, 256, 256),
-        new (256, 0, 256, 256),
-        new (512, 0, 256, 256),
-        new (768, 0, 256, 256),
-    ];
-
-    public static Rectangle[] HandTorchTextures = [
-        new (0, 0, 256, 256),
-        new (256, 0, 256, 256),
-        new (512, 0, 256, 256),
-        new (768, 0, 256, 256),
-    ];
 
     public int OffsetX => (int)(Math.Sin(_bobPhase) * 4.0f + _swayX);
     
@@ -52,16 +36,20 @@ public class ViewModel(Player currentPlayer)
     public void Render(RenderBuffer buffer, LightMap lightMap, Texture2D leftTexture, Texture2D rightTexture)
     {
         const int spacing = 30;
+        const int cellSize = 256;
+        
         var rightX = buffer.Width / 2 - spacing;
         var leftX = spacing;
         var screenY = buffer.Height / 2;
         
         var brightness = lightMap.Illumination(currentPlayer.Position, [currentPlayer.Torch]);
 
-        var index = 1+(int)(_animTime / 0.5f) % 3;
-        buffer.RenderSprite(leftX + OffsetX, screenY + OffsetY, leftTexture,  HandTorchTextures[index], shade: brightness);
+        var leftHandFrameCount = leftTexture.Width / 256 - 1;
+        var leftIndex = 0;// 1+(int)(_animTime / 0.1f) % leftHandFrameCount;
+        buffer.RenderSprite(leftX + OffsetX, screenY + OffsetY, leftTexture, new Rectangle(leftIndex * cellSize, 0, cellSize, cellSize), shade: brightness);
 
-        var rightIndex = (int)(_attackAnimTime / 0.3f) % 4;
-        buffer.RenderSprite(rightX + OffsetX, screenY + OffsetY, rightTexture,  HandFireballTextures[rightIndex], shade: brightness);
+        var rightHandFrameCount = rightTexture.Width / 256;
+        var rightIndex = (_attackAnimTime > 0.0f ? (int)(_attackAnimTime / 0.6f) : (int)(_animTime / 0.1f))% rightHandFrameCount;
+        buffer.RenderSprite(rightX + OffsetX, screenY + OffsetY, rightTexture,  new Rectangle(rightIndex * cellSize, 0, cellSize, cellSize), shade: brightness);
     }
 }

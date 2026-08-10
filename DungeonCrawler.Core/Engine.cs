@@ -26,6 +26,8 @@ public class Engine : Game
     /// </summary>  
     public static ImGuiRenderer ImGuiRenderer { get; private set; }
     
+    public static float DeltaTime { get; private set; }
+    
     public const int TargetWidth = 640;
     public const int TargetHeight = 480;
     
@@ -159,7 +161,7 @@ public class Engine : Game
     protected override void Update(GameTime gameTime)
     {
         var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        
+        DeltaTime = deltaTime;
         var keyboardState = Keyboard.GetState();
         
         
@@ -188,7 +190,7 @@ public class Engine : Game
         for (var i = _currentLevel.Entities.Count-1; i >= 0; --i)
         {
             var entity = _currentLevel.Entities[i];
-            if (entity.Health <= 0)
+            if (entity.IsAlive == false && entity.DeathTime <= 0.0f)
             {
                 _currentLevel.Remove(entity);
                 continue;
@@ -218,7 +220,7 @@ public class Engine : Game
         {
             var entity = _currentLevel.Entities[i];
 
-            if(entity is Player || entity.Health <= 0) continue;
+            if(entity is Player || (!entity.IsAlive && entity.DeathTime <= 0.0f)) continue;
 
             if (entity.Sprite != null)
             {
@@ -230,18 +232,21 @@ public class Engine : Game
                 // we have to find a better way soon lol
                 var texture = entity switch
                 {
-                    Projectile => SpriteManager.Get(Sprites.FireballSheet).Texture,
                     Spider => SpriteManager.Get(Sprites.SpiderSheet).Texture,
                     Torch => SpriteManager.Get(Sprites.TorchSheet).Texture,
                 };
 
-                var index = entity is Torch torch ? torch.AnimIndex : 0; 
+                var index = entity switch
+                {
+                    Torch torch => (1 + torch.AnimIndex, 0),
+                    _ => (0, 0),
+                }; 
                 
                 sprites.Add(new Sprite
                 {
                     Position = entity.Position,
                     Texture = texture,
-                    SourceRectangle = new Rectangle((1+index) * 256, 0, 256, 256),
+                    SourceRectangle = new Rectangle(index.Item1 * 256, index.Item2*256, 256, 256),
                     Entity = entity,
                 });
             }
@@ -250,8 +255,10 @@ public class Engine : Game
         _billboardRenderer.Render(_renderBuffer, _currentPlayer, _lightMap, sprites, _renderer.WallDepth);
         
         _healthBarRenderer.Render(_renderBuffer, _renderer.WallDepth);
-        
-        _viewModel.Render(_renderBuffer, _lightMap, SpriteManager.GetTexture(Sprites.HandTorchSheet), SpriteManager.GetTexture(Sprites.HandFireballSheet));
+
+        var leftHandTexture = SpriteManager.GetTexture(Sprites.KnifeHandSheet);
+        var rightHandTexture = _currentPlayer.AttackTime < 0.001f ? SpriteManager.GetTexture(Sprites.HandFireballIdleSheet) : SpriteManager.GetTexture(Sprites.HandFireballSheet);
+        _viewModel.Render(_renderBuffer, _lightMap, leftHandTexture, rightHandTexture);
         
         SpriteBatch.Begin(
             SpriteSortMode.Deferred, 

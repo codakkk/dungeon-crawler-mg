@@ -48,7 +48,6 @@ public class Spider : Entity
 
     public override void OnDie()
     {
-        Console.WriteLine("Spider just died lol");
         base.OnDie();
     }
 }

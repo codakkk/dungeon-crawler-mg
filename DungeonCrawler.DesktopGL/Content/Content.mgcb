@@ -26,6 +26,19 @@
 /processorParam:Version=3.8.5.0
 /build:fireball_sheet.png
 
+#begin hand_fireball_idle_sheet.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/processorParam:Version=3.8.5.0
+/build:hand_fireball_idle_sheet.png
+
 #begin hand_fireball_sheet.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -38,19 +51,6 @@
 /processorParam:TextureFormat=Color
 /processorParam:Version=3.8.5.0
 /build:hand_fireball_sheet.png
-
-#begin hand_torch_sheet.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/processorParam:Version=3.8.5.0
-/build:hand_torch_sheet.png
 
 #begin hand_torch_sheet.png
 /importer:TextureImporter
@@ -103,19 +103,6 @@
 /processorParam:TextureFormat=Color
 /processorParam:Version=3.8.5.0
 /build:spider_sheet.png
-
-#begin torch_sheet.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/processorParam:Version=3.8.5.0
-/build:torch_sheet.png
 
 #begin torch_sheet.png
 /importer:TextureImporter
